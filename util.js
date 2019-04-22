@@ -42,3 +42,15 @@ function classnames() {
   }
   return res.join(' ');
 }
+
+/**
+ * compose 
+ * @param {function[]} 
+ * 
+ * @return compose之后的函数
+ * @example
+ * fn = compose(fn1, fn2, fn3);
+ * // 链式调用，最终返回一个数组
+ * fn => [fn3(arg)];
+ */
+const compose = (...fns) => (...arg) => fns.reduce((init, fn) => [fn(...init)], arg);
