@@ -1,34 +1,137 @@
-function creatMap(depth) {
-  const mapDepth = depth + 2;
-  const map = [];
-  for (let i = 0; i < mapDepth; i++) {
-    const arr = new Array(mapDepth).fill(1);
-    if (i === 0 || i === mapDepth - 1) {
-      for (let j = 1; j < arr.length - 1; j++) {
-        arr[j] = 0;
-      }
-    } else {
-      arr[0] = 0;
-      arr[arr.length - 1] = 0;
-    }
-    map.push(arr);
-  }
-  return map
-}
-
-const map = [
-  [1, 0, 0, 0, 1],
-  [0, 1, 0, 1, 0],
-  [0, 1, 1, 1, 0],
-  [0, 1, 1, 1, 0],
-  [1, 0, 0, 0, 1],
-];
 const direction_map = {
   left: [-1, 0],
   right: [1, 0],
   top: [0, -1],
   bottom: [0, 1],
 };
+/**
+ * 
+ * @param {number} depth_x 
+ * @param {number} depth_y 
+ * @param {array} items 
+ */
+function creatMap(depth_x, depth_y, items) {
+  if ((depth_x * depth_y) % 2 !== 0) {
+    throw new Error('x，y乘积必须为偶数');
+  }
+  const map = [];
+  const contents = [];
+  let use_items = [];
+  for (let i = 0; i < depth_y; i++) {
+    const arr = new Array(depth_x).fill(1);
+    const content = new Array();
+    map.push(arr);
+    contents.push(content);
+  }
+  const fragment = document.createDocumentFragment();
+  const halfMapLength = depth_x * depth_y / 2;
+  map.map((arr, index) => arr.map((item, item_index) => {
+    const div = document.createElement('div');
+    div.className = "box";
+    div.style.left = item_index * 100 + 'px';
+    div.style.top = index * 100 + 'px';
+    let t;
+    if (index * depth_x + item_index >= halfMapLength) {
+      const t_index = Math.floor(use_items.length * Math.random());
+      t = use_items[t_index];
+      use_items.splice(t_index, 1);
+    } else {
+      t = items[Math.floor(items.length * Math.random())];
+      use_items.push(t);
+    }
+    div.innerHTML = t;
+    contents[index][item_index] = t;
+    div.setAttribute('data-x', item_index);
+    div.setAttribute('data-y', index);
+    fragment.appendChild(div);
+  }));
+  if (!jiance(map, contents)) {
+    alert('没有可以消除的了');
+  }
+  return {
+    map: map,
+    contents: contents,
+    dom_fragment: fragment,
+  };
+}
+
+let one = {
+  dom: null,
+  content: '',
+  position: [],
+};
+
+const data = creatMap(10, 6, [1,2,3,4,5,6,7,8,9,0,11,12,13,14,15,16,17,18,19,20]);
+const map = data.map;
+const contents = data.contents;
+const container = document.getElementById('container');
+
+container.addEventListener('click', (event) => {
+  const x = parseInt(event.target.getAttribute('data-x'));
+  const y = parseInt(event.target.getAttribute('data-y'));
+  if (x == undefined || y == undefined) {
+    return;
+  }
+  if (x == one.position[0] && y == one.position[1]) {
+    return;
+  }
+  const text = event.target.innerHTML;
+  if (one.content && text == one.content) {
+    const flag = disAppear(map, one.position, [x, y]);
+    if (flag) {
+      map[one.position[1]][one.position[0]] = 0;
+      map[y][x] = 0;
+      event.target.innerHTML = '';
+      one.dom.innerHTML = '';
+      if (!jiance(map, contents)) {
+        console.log('没有可以消除的了');
+      }
+    }
+    one = {
+      content: '',
+      position: [],
+      dom: null,
+    };
+  } else {
+    one = {
+      dom: event.target,
+      content: text,
+      position: [x, y],
+    };
+  }
+})
+
+container.appendChild(data.dom_fragment);
+/**
+ * @description 检测是否还有可以消除的物体
+ * @param {*} map 
+ */
+function jiance(map, contents) {
+  console.time();
+  const t = map.some((arr, index) => arr.some((item, item_index) => {
+    if (!item) {
+      return false;
+    }
+    return map.some((arr, target_index) => arr.some((item, target_item_index) => {
+      if (target_index === index && target_item_index === item_index) {
+        return false;
+      }
+      if (!item) {
+        return false;
+      }
+      if (contents[index][item_index] === contents[target_index][target_item_index]) {
+        console.log([item_index, index], [target_item_index, target_index])
+        if (disAppear(map, [item_index, index], [target_item_index, target_index])) {
+          console.log([item_index, index], [target_item_index, target_index])
+          return true;
+        }
+      }
+      return false;
+    }))
+  }));
+  console.timeEnd();
+  return t;
+}
 
 /**
  * @description 
@@ -54,7 +157,9 @@ function disAppear(map, client, target) {
     return true;
   }
   if (client[0] !== target[0] && client[1] !== target[1]) {
-    return yigewan(map, client, target);
+    if (yigewan(map, client, target)) {
+      return true;
+    }
   }
   // 两个弯
 
@@ -63,19 +168,16 @@ function disAppear(map, client, target) {
     const tmp_client = [...client];
     tmp_client[0] += operation[0];
     tmp_client[1] += operation[1];
-    let limit = 0;
     while (
-      limit < 10 &&
-        Math.max(tmp_client[0], 0) && Math.max(tmp_client[1], 0)
-        && tmp_client[0] < map.length && tmp_client[1] < map.length
-        && !map[tmp_client[0]][tmp_client[1]]
+        tmp_client[0] >= 0 && tmp_client[1] >= 0
+        && tmp_client[0] < map[0].length && tmp_client[1] < map.length
+        && !map[tmp_client[1]][tmp_client[0]]
     ) {
       if (yigewan(map, tmp_client, target)) {
         return true;
       }
       tmp_client[0] += operation[0];
       tmp_client[1] += operation[1];
-      limit++;
     }
   });
   return flag;
@@ -101,7 +203,7 @@ function zhilian(map, tmp_client, target, direction, true_target = false) {
   client[0] += operation[0];
   client[1] += operation[1];
   while (client[0] !== target[0] || client[1] !== target[1]) {
-    if (map[client[0]][client[1]]) {
+    if (map[client[1]][client[0]]) {
       return false;
     }
     client[0] += operation[0];
@@ -111,7 +213,7 @@ function zhilian(map, tmp_client, target, direction, true_target = false) {
   if (client[0] === target[0] && client[1] === target[1]) {
     if (true_target) {
       return true;
-    } else if (map[client[0]][client[1]]) {
+    } else if (map[client[1]][client[0]]) {
       return false;
     }
   }
@@ -126,19 +228,8 @@ function yigewan(map, client, target) {
   if (zhilian(map, client, [client_x, target_y], 'y') && zhilian(map, [client_x, target_y], target, 'x', true)) {
     return true;
   }
-  // zhilian(client, [client_x, target_y]);
-  // zhilian([client_x, target_y], target);
   if (zhilian(map, client, [target_x, client_y], 'x') && zhilian(map, [target_x, client_y], target, 'y', true)) {
     return true;
   }
   return false;
 }
-
-// console.log(disAppear(map, [1, 1], [2, 3]))
-// console.log(disAppear(map, [2, 2], [2, 3]))
-// console.log(disAppear(map, [2, 2], [1, 2]))
-// console.log(disAppear(map, [1, 1], [3, 3]))
-// console.log(disAppear(map, [2, 1], [2, 3]))
-// console.log(disAppear(map, [2, 2], [1, 3]))
-console.log(disAppear(map, [3, 3], [1, 3]))
-console.table(map)
