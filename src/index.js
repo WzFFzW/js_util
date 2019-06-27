@@ -6,6 +6,4 @@ r.keys().forEach(key => {
     moduleExports[attr] = r(key);
 });
 
-console.log(1111);
-
 module.exports = moduleExports;

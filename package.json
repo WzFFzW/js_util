@@ -21,6 +21,18 @@
     "js",
     "工具"
   ],
+  "ava": {
+    "files": [
+      "test/*.test.js"
+    ],
+    "inherit": true,
+    "verbose": true,
+    "babel": {
+			"testOptions": {
+				"babelrc": false
+			}
+		}
+  },
   "author": "WzFFzW",
   "license": "MIT",
   "bugs": {
@@ -28,6 +40,7 @@
   },
   "homepage": "https://github.com/WzFFzW/js_util#readme",
   "devDependencies": {
+    "@babel/register": "^7.4.4",
     "ava": "^1.4.1",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
