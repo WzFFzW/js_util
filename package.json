@@ -2,7 +2,7 @@
   "name": "js_util",
   "version": "1.0.0",
   "description": "js工具库",
-  "main": "  ",
+  "main": "./min/js_util.min.js",
   "scripts": {
     "test": "ava",
     "build": "webpack --config ./script/webpack.conf.js --color",
@@ -28,10 +28,10 @@
     "inherit": true,
     "verbose": true,
     "babel": {
-			"testOptions": {
-				"babelrc": false
-			}
-		}
+      "testOptions": {
+        "babelrc": false
+      }
+    }
   },
   "author": "WzFFzW",
   "license": "MIT",

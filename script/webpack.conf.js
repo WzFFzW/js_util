@@ -11,7 +11,8 @@ const config = {
     filename: `${pkg.name}.min.js`,
     path: path.resolve(rootPath, 'min'),
     library: `${pkg.name}`,
-    libraryTarget: "umd"
+    libraryTarget: "umd",
+    globalObject: `(typeof self !== 'undefined' ? self : this)`,
   },
   module: {
     rules: [{
