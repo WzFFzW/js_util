@@ -1,6 +1,6 @@
 {
-  "name": "js_util",
-  "version": "1.0.0",
+  "name": "js_utils_self",
+  "version": "0.0.1",
   "description": "js工具库",
   "main": "./min/js_util.min.js",
   "scripts": {
